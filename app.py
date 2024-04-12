@@ -8,10 +8,10 @@ app = Flask(__name__)
 def connect_to_db():
         connection = psycopg2.connect(
             user="postgres",
-            password="j",
+            password="lara",
             host="127.0.0.1",
             port="5432",
-            database="project"
+            database="project-433"
         )
         return connection
 def fetch_table_data(connection, table_name):
@@ -79,6 +79,31 @@ def display_author_info():
     connection.close()
     
     return render_template('display_author_info.html', author=author_info, books=books)
+@app.route('/search_customer')
+def search_customer():
+    customer_id = request.args.get('customer_id')
+    if not customer_id:
+        return "Customer ID is required", 400
+    
+    connection = connect_to_db()
+    
+    customer_query = "SELECT * FROM customers WHERE CustomerID = %s"
+    cursor = connection.cursor()
+    cursor.execute(customer_query, (customer_id,))
+    customer = cursor.fetchone()
+    
+    orders_query = "SELECT * FROM orders WHERE customerID = %s"
+    cursor.execute(orders_query, (customer_id,))
+    orders = cursor.fetchall()
+    
+    cursor.close()
+    
+    if not customer:
+        return f"No customer found with ID {customer_id}", 404
+   
+    connection.close()
+    
+    return render_template('display_customer_info.html', customer=customer, orders=orders)
 
 if __name__ == '__main__':
     app.run(debug=True)
